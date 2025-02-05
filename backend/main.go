@@ -87,7 +87,6 @@ func main() {
 		}
 	}()
 
-	// Graceful shutdown handling
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
@@ -205,14 +204,12 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 
-	// Compare stored and received passwords
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password)); err != nil {
 		log.Println("Password mismatch for email:", loginData.Email)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// Mocked JWT token (you should use a real JWT library)
 	token := "mocked-jwt-token"
 
 	c.JSON(http.StatusOK, gin.H{
@@ -229,102 +226,6 @@ func UserLogin(c *gin.Context) {
 }
 
 // Update user func
-// func updateUser(c *gin.Context) {
-// 	id, err := strconv.Atoi(c.Param("id"))
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-// 		return
-// 	}
-
-// 	var updateUser struct {
-// 		Username    string  `json:"username"`
-// 		Email       string  `json:"email"`
-// 		OldPassword string  `json:"old_password"`
-// 		NewPassword string  `json:"new_password"`
-// 		ImageUrl    *string `json:"image_url"`
-// 	}
-
-// 	if err := c.ShouldBindJSON(&updateUser); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
-// 		return
-// 	}
-
-// 	// Fetch current user details
-// 	var existingUser User
-// 	err = dbPool.QueryRow(context.Background(),
-// 		"SELECT username, email, password, image_url FROM public.users WHERE id = $1", id).
-// 		Scan(&existingUser.Username, &existingUser.Email, &existingUser.Password, &existingUser.ImageUrl)
-
-// 	if err != nil {
-// 		log.Printf("User not found: %v\n", err)
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 		return
-// 	}
-
-// 	// Validate old password if new password is provided
-// 	if updateUser.NewPassword != "" {
-// 		if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(updateUser.OldPassword)); err != nil {
-// 			log.Println("Incorrect old password attempt.")
-// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect old password"})
-// 			return
-// 		}
-
-// 		// Hash the new password
-// 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(updateUser.NewPassword), bcrypt.DefaultCost)
-// 		if err != nil {
-// 			log.Println("Error hashing new password:", err)
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process new password"})
-// 			return
-// 		}
-// 		existingUser.Password = string(hashedPassword)
-// 	}
-
-// 	// Use existing values if new ones are not provided
-// 	username := updateUser.Username
-// 	if username == "" {
-// 		username = existingUser.Username
-// 	}
-
-// 	email := updateUser.Email
-// 	if email == "" {
-// 		email = existingUser.Email
-// 	}
-
-// 	imageUrl := updateUser.ImageUrl
-// 	if imageUrl == nil {
-// 		imageUrl = existingUser.ImageUrl
-// 	}
-
-// 	// Perform the update
-// 	_, err = dbPool.Exec(context.Background(),
-// 		"UPDATE public.users SET username=$1, email=$2, password=$3, image_url=$4 WHERE id=$5",
-// 		username, email, existingUser.Password, imageUrl, id)
-
-// 	if err != nil {
-// 		log.Printf("Failed to update user: %v\n", err)
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
-// 		return
-// 	}
-
-// 	// Fetch updated user data
-// 	var updatedUser User
-// 	err = dbPool.QueryRow(context.Background(),
-// 		"SELECT id, username, email, image_url, created_at FROM public.users WHERE id = $1", id).
-// 		Scan(&updatedUser.ID, &updatedUser.Username, &updatedUser.Email, &updatedUser.ImageUrl, &updatedUser.Created_At)
-
-// 	if err != nil {
-// 		log.Printf("Failed to fetch updated user: %v\n", err)
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User updated but failed to fetch details"})
-// 		return
-// 	}
-
-// 	// Return updated user info
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"message": "User updated successfully",
-// 		"user":    updatedUser,
-// 	})
-// }
-
 func updateUser(c *gin.Context) {
 	id := c.Param("id")
 	var updateUser struct {
@@ -341,7 +242,6 @@ func updateUser(c *gin.Context) {
 		return
 	}
 
-	// Fetch existing user data
 	var storedPassword string
 	err := dbPool.QueryRow(context.Background(),
 		"SELECT password FROM public.users WHERE id = $1", id).Scan(&storedPassword)

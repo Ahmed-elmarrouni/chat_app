@@ -49,100 +49,24 @@ const ChatPage = () => {
         }
     };
 
-    // const [profileData, setProfileData] = useState({
-    //     username: loggedInUser.username || "",
-    //     email: loggedInUser.email || "",
-    //     password: "",
-    //     image_url: loggedInUser.image_url || "",
-    // });
-
 
     const [profileData, setProfileData] = useState({
         username: loggedInUser.username || "",
         email: loggedInUser.email || "",
         password: "",
         image_url: loggedInUser.image_url || "",
-        old_password: "", // Ensure old password is initialized
-        new_password: "", // Ensure new password is initialized
+        old_password: "", 
+        new_password: "", 
     });
 
-    // const handleProfileChange = (e) => {
-    //     const { name, value } = e.target;
-    //     setProfileData((prevData) => ({ ...prevData, [name]: value }));
-    // };
 
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
         setProfileData((prevData) => ({
             ...prevData,
-            [name]: value || "", // Ensures empty strings instead of undefined
+            [name]: value || "", 
         }));
     };
-
-    // const handleImageChange = (e) => {
-    //     const file = e.target.files[0];
-    //     if (file) {
-    //         setUploading(true);
-    //         const imageUrl = URL.createObjectURL(file);
-    //         setTimeout(() => {
-    //             setProfileData((prevData) => ({ ...prevData, image_url: imageUrl }));
-    //             setUploading(false);
-    //         }, 1000);
-    //     }
-    // };
-
-    // const handleProfileUpdate = async () => {
-    //     try {
-    //         const updatedFields = {};
-
-    //         if (profileData.username && profileData.username !== loggedInUser.username) {
-    //             updatedFields.username = profileData.username;
-    //         }
-    //         if (profileData.email && profileData.email !== loggedInUser.email) {
-    //             updatedFields.email = profileData.email;
-    //         }
-    //         if (profileData.image_url && profileData.image_url !== loggedInUser.image_url) {
-    //             updatedFields.image_url = profileData.image_url;
-    //         }
-
-    //         // Validate password update (if requested)
-    //         if ((profileData.old_password && profileData.old_password.trim() !== "") ||
-    //             (profileData.new_password && profileData.new_password.trim() !== "")) {
-
-    //             if (!profileData.old_password.trim()) {
-    //                 alert("Please enter your old password to update the password.");
-    //                 return;
-    //             }
-    //             if (!profileData.new_password.trim()) {
-    //                 alert("Please enter a new password.");
-    //                 return;
-    //             }
-
-    //             updatedFields.old_password = profileData.old_password;
-    //             updatedFields.new_password = profileData.new_password;
-    //         }
-
-    //         if (Object.keys(updatedFields).length === 0) {
-    //             console.log("No changes detected, skipping update.");
-    //             return;
-    //         }
-
-    //         const updatedUser = await updateUser(loggedInUser.id, updatedFields);
-    //         localStorage.setItem("user", JSON.stringify({ ...loggedInUser, ...updatedFields }));
-
-    //         setProfileData((prev) => ({
-    //             ...prev,
-    //             old_password: "",
-    //             new_password: "",
-    //             ...updatedFields,
-    //         }));
-
-    //         setEditingProfile(false);
-    //     } catch (error) {
-    //         console.error("Error updating profile:", error);
-    //         alert("Failed to update profile. Please check your old password and try again.");
-    //     }
-    // };
 
     const handleProfileUpdate = async () => {
         try {

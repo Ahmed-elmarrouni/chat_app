@@ -1,37 +1,3 @@
-// package main
-
-// import (
-// 	"context"
-// 	"fmt"
-// 	"log"
-// 	"os"
-
-// 	"github.com/jackc/pgx/v5"
-// )
-
-// var conn *pgx.Conn
-
-// func connectDB() {
-// 	databaseURL := "postgres://postgres:123456789@localhost:5432/chat_app_db"
-
-// 	var err error
-
-// 	conn, err = pgx.Connect(context.Background(), databaseURL)
-
-// 	if err != nil {
-// 		log.Fatalf("Unable to coonnect to DB: %v\n", err)
-// 		os.Exit(1)
-// 	}
-
-// 	fmt.Println("DB Connected successfully")
-// }
-
-// func DBclose() {
-// 	conn.Close(context.Background())
-// 	fmt.Println("Db connectoin close")
-// }
-
-// ? ----------------------------------------
 package main
 
 import (
@@ -44,10 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Global connection pool (exported so it can be used in main.go)
 var DbPool *pgxpool.Pool
 
-// ConnectDB initializes the connection pool
 func ConnectDB() {
 	databaseURL := "postgres://postgres:123456789@localhost:5432/chat_app_db"
 
