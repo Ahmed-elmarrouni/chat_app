@@ -49,12 +49,18 @@ export const login = async (email, password) => {
 };
 
 // Update user function
-export const updateUser = async (id, user) => {
-    try {
-        const response = await axios.put(`${API_BASE_URL}/users/${id}`, user);
-        return response.data;
-    } catch (error) {
-        console.error("Can't update user", error);
-        throw error;
+export const updateUser = async (userId, updatedFields) => {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedFields),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to update user");
     }
+
+    return await response.json();
 };
