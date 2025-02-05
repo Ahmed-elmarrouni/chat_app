@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -37,6 +38,8 @@ func main() {
 
 	r.GET("/users", GetUsers)
 	r.POST("/users", CreateUser)
+	r.GET("/users/:id", GetUserByID)
+	r.POST("/login", UserLogin)
 
 	go func() {
 		fmt.Println("server running on http://localhost:8080")
@@ -75,30 +78,101 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// Get user by ID
+func GetUserByID(c *gin.Context) {
+	var user User
+	id := c.Param("id")
+	err := conn.QueryRow(context.Background(), "SELECT id, username, email, password, image_url, created_at FROM public.users WHERE id = $1", id).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.ImageUrl, &user.Created_At)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+	c.JSON(http.StatusOK, user)
+
+}
+
 func CreateUser(c *gin.Context) {
 	var newUser User
 	if err := c.ShouldBindJSON(&newUser); err != nil {
-		log.Println("JSON Bind Error:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data", "details": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
 
-	// Convert empty string to NULL
-	var imageURL interface{}
-	if newUser.ImageUrl == nil || *newUser.ImageUrl == "" {
-		imageURL = nil
-	} else {
-		imageURL = *newUser.ImageUrl
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
 	}
 
-	_, err := conn.Exec(context.Background(),
+	_, err = conn.Exec(context.Background(),
 		"INSERT INTO public.users (username, email, password, image_url) VALUES ($1, $2, $3, $4)",
-		newUser.Username, newUser.Email, newUser.Password, imageURL)
+		newUser.Username, newUser.Email, string(hashedPassword), newUser.ImageUrl)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+	var createdUser User
+	err = conn.QueryRow(context.Background(),
+		"SELECT id, username, email, image_url, created_at FROM public.users WHERE email = $1",
+		newUser.Email).Scan(&createdUser.ID, &createdUser.Username, &createdUser.Email, &createdUser.ImageUrl, &createdUser.Created_At)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User created but failed to fetch details"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User created successfully",
+		"user":    createdUser,
+	})
+}
+
+func UserLogin(c *gin.Context) {
+	var loginData struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		log.Println("Invalid login request data:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	var user User
+	err := conn.QueryRow(context.Background(),
+		"SELECT id, username, email, password, image_url, created_at FROM public.users WHERE email = $1",
+		loginData.Email).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.ImageUrl, &user.Created_At)
+
+	if err != nil {
+		log.Println("User not found for email:", loginData.Email)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// Log stored and received passwords
+	log.Println("Stored Password:", user.Password)
+	log.Println("Received Password:", loginData.Password)
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password)); err != nil {
+		log.Println("Password mismatch for email:", loginData.Email)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	token := "mocked-jwt-token"
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"user": gin.H{
+			"id":         user.ID,
+			"username":   user.Username,
+			"email":      user.Email,
+			"image_url":  user.ImageUrl,
+			"created_at": user.Created_At,
+		},
+		"token": token,
+	})
 }
